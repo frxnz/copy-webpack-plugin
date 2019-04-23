@@ -1,21 +1,25 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
+Object.defineProperty(exports, '__esModule', {
+  value: true,
 });
 exports.default = void 0;
 
-var _path = _interopRequireDefault(require("path"));
+const _path = _interopRequireDefault(require('path'));
 
-var _webpackLog = _interopRequireDefault(require("webpack-log"));
+const _webpackLog = _interopRequireDefault(require('webpack-log'));
 
-var _preProcessPattern = _interopRequireDefault(require("./preProcessPattern"));
+const _preProcessPattern = _interopRequireDefault(
+  require('./preProcessPattern')
+);
 
-var _processPattern = _interopRequireDefault(require("./processPattern"));
+const _processPattern = _interopRequireDefault(require('./processPattern'));
 
-var _postProcessPattern = _interopRequireDefault(require("./postProcessPattern"));
+const _postProcessPattern = _interopRequireDefault(
+  require('./postProcessPattern')
+);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { default: obj };
+}
 
 class CopyPlugin {
   constructor(patterns = [], options = {}) {
@@ -34,23 +38,22 @@ class CopyPlugin {
     let context;
 
     if (!this.options.context) {
-      ({
-        context
-      } = compiler.options);
+      ({ context } = compiler.options);
     } else if (!_path.default.isAbsolute(this.options.context)) {
-      context = _path.default.join(compiler.options.context, this.options.context);
+      context = _path.default.join(
+        compiler.options.context,
+        this.options.context
+      );
     } else {
-      ({
-        context
-      } = this.options);
+      ({ context } = this.options);
     }
 
     const logger = (0, _webpackLog.default)({
       name: 'copy-webpack-plugin',
-      level: this.options.logLevel || 'warn'
+      level: this.options.logLevel || 'warn',
     });
     const plugin = {
-      name: 'CopyPlugin'
+      name: 'CopyPlugin',
     };
     compiler.hooks.emit.tapAsync(plugin, (compilation, callback) => {
       logger.debug('starting emit');
@@ -65,47 +68,67 @@ class CopyPlugin {
         output: compiler.options.output.path,
         ignore: this.options.ignore || [],
         copyUnmodified: this.options.copyUnmodified,
-        concurrency: this.options.concurrency
+        concurrency: this.options.concurrency,
       };
 
-      if (globalRef.output === '/' && compiler.options.devServer && compiler.options.devServer.outputPath) {
+      if (
+        globalRef.output === '/' &&
+        compiler.options.devServer &&
+        compiler.options.devServer.outputPath
+      ) {
         globalRef.output = compiler.options.devServer.outputPath;
       }
 
-      const {
-        patterns
-      } = this;
-      Promise.all(patterns.map(pattern => Promise.resolve().then(() => (0, _preProcessPattern.default)(globalRef, pattern)) // Every source (from) is assumed to exist here
-      // eslint-disable-next-line no-shadow
-      .then(pattern => (0, _processPattern.default)(globalRef, pattern).then(files => {
-        if (!files) {
-          return Promise.resolve();
-        }
+      const { patterns } = this;
+      Promise.all(
+        patterns.map((pattern) =>
+          Promise.resolve()
+            .then(() => (0, _preProcessPattern.default)(globalRef, pattern)) // Every source (from) is assumed to exist here
+            // eslint-disable-next-line no-shadow
+            .then((pattern) =>
+              (0, _processPattern.default)(globalRef, pattern).then((files) => {
+                if (!files) {
+                  return Promise.resolve();
+                }
 
-        return Promise.all(files.filter(Boolean).map(file => (0, _postProcessPattern.default)(globalRef, pattern, file)));
-      })))).catch(error => {
-        compilation.errors.push(error);
-      }).then(() => {
-        logger.debug('finishing emit');
-        callback();
-      });
+                return Promise.all(
+                  files
+                    .filter(Boolean)
+                    .map((file) =>
+                      (0, _postProcessPattern.default)(globalRef, pattern, file)
+                    )
+                );
+              })
+            )
+        )
+      )
+        .catch((error) => {
+          compilation.errors.push(error);
+        })
+        .then(() => {
+          logger.debug('finishing emit');
+          callback();
+        });
     });
     compiler.hooks.afterEmit.tapAsync(plugin, (compilation, callback) => {
       logger.debug('starting after-emit'); // Add file dependencies if they're not already tracked
 
       for (const fileDependency of fileDependencies) {
         if (compilation.fileDependencies.has(fileDependency)) {
-          logger.debug(`not adding '${fileDependency}' to change tracking, because it's already tracked`);
+          logger.debug(
+            `not adding '${fileDependency}' to change tracking, because it's already tracked`
+          );
         } else {
           logger.debug(`adding '${fileDependency}' to change tracking`);
           compilation.fileDependencies.add(fileDependency);
         }
       } // Add context dependencies if they're not already tracked
 
-
       for (const contextDependency of contextDependencies) {
         if (compilation.contextDependencies.has(contextDependency)) {
-          logger.debug(`not adding '${contextDependency}' to change tracking, because it's already tracked`);
+          logger.debug(
+            `not adding '${contextDependency}' to change tracking, because it's already tracked`
+          );
         } else {
           logger.debug(`adding '${contextDependency}' to change tracking`);
           compilation.contextDependencies.add(contextDependency);
@@ -116,8 +139,7 @@ class CopyPlugin {
       callback();
     });
   }
-
 }
 
-var _default = CopyPlugin;
+const _default = CopyPlugin;
 exports.default = _default;
